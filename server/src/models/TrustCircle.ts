@@ -2,13 +2,17 @@ import mongoose from "mongoose";
 
 const trustCircleSchema = new mongoose.Schema(
   {
+    // Account owner
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
 
-    trustedEmail: {
-      type: String,
+    // Guardian (registered Verity user)
+    guardianId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
 
@@ -16,10 +20,17 @@ const trustCircleSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    trustedEmail: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,
   }
+  
 );
+
 
 export default mongoose.model("TrustCircle", trustCircleSchema);

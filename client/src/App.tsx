@@ -8,7 +8,8 @@ import Devices from "./pages/Devices";
 import TrustCircle from "./pages/TrustCircle";
 import PendingRequests from "./pages/PendingRequests";
 import ApprovePage from "./pages/ApprovePage";
-
+import Recovery from "./pages/Recovery";
+import RecoveryRequests from "./pages/RecoveryRequests";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -28,6 +29,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/recovery" element={<Recovery />} />
+
+<Route
+  path="/recovery-requests"
+  element={<RecoveryRequests />}
+/>
+
+
 
         <Route
           path="/verify"

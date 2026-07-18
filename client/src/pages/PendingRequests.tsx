@@ -6,17 +6,23 @@ interface Request {
   challengeId: string;
   deviceId: string;
   status: string;
+  createdAt?: string;
 }
 
 export default function PendingRequests() {
   const [requests, setRequests] = useState<Request[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const loadRequests = async () => {
     try {
       const res = await api.get("/qr/pending");
-      setRequests(res.data);
+
+      setRequests(res.data.requests || []);
     } catch (err) {
       console.error(err);
+      setRequests([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -26,7 +32,7 @@ export default function PendingRequests() {
         challengeId,
       });
 
-      alert("Request Approved");
+      alert("✅ Login Approved");
 
       loadRequests();
     } catch (err) {
@@ -39,35 +45,68 @@ export default function PendingRequests() {
     loadRequests();
   }, []);
 
+  if (loading) {
+    return <h2 style={{ textAlign: "center" }}>Loading...</h2>;
+  }
+
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>Pending Login Requests</h1>
+    <div
+      style={{
+        maxWidth: "700px",
+        margin: "40px auto",
+      }}
+    >
+      <h1>🔔 Pending Login Requests</h1>
 
       {requests.length === 0 ? (
-        <p>No Pending Requests</p>
+        <div
+          style={{
+            background: "#f4f4f4",
+            padding: 20,
+            borderRadius: 10,
+          }}
+        >
+          ✅ No Pending Requests
+        </div>
       ) : (
         requests.map((request) => (
           <div
             key={request._id}
             style={{
-              border: "1px solid #ccc",
-              padding: "15px",
-              marginBottom: "15px",
-              borderRadius: "10px",
+              border: "1px solid #ddd",
+              borderRadius: 12,
+              padding: 20,
+              marginBottom: 20,
+              background: "white",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
           >
+            <h3>🔐 New Login Request</h3>
+
             <p>
-              <strong>Challenge:</strong> {request.challengeId}
+              <b>Device ID</b>
+              <br />
+              {request.deviceId}
             </p>
 
             <p>
-              <strong>Device:</strong> {request.deviceId}
+              <b>Status</b>
+              <br />
+              🟠 {request.status}
             </p>
 
             <button
               onClick={() => approve(request.challengeId)}
+              style={{
+                padding: "10px 20px",
+                border: "none",
+                borderRadius: 8,
+                cursor: "pointer",
+                background: "#2563eb",
+                color: "white",
+              }}
             >
-              Approve
+              Approve Login
             </button>
           </div>
         ))
