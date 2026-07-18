@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import User from "../models/User";
+import OTP from "../models/OTP";
 import User from "../models/User";
 import { auth, AuthRequest } from "../middleware/auth";
 const router = Router();
@@ -119,5 +119,167 @@ router.get("/me", auth, async (req: AuthRequest, res) => {
       });
     }
   });
+/*
+VERIFY PASSWORD
+*/
 
+router.post("/verify-password", auth, async (req: AuthRequest, res) => {
+    try {
+      const { password } = req.body;
+  
+      const user = await User.findById(req.user.id);
+  
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+  
+      const match = await bcrypt.compare(password, user.password);
+  
+      if (!match) {
+        return res.status(400).json({
+          success: false,
+          message: "Incorrect password",
+        });
+      }
+  
+      res.json({
+        success: true,
+        message: "Password verified",
+      });
+    } catch (err) {
+      console.error(err);
+  
+      res.status(500).json({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  });
+
+  /*
+DELETE ACCOUNT
+*/
+
+router.post("/delete-account", auth, async (req: AuthRequest, res) => {
+    try {
+      const { password, otp } = req.body;
+  
+      const user = await User.findById(req.user.id);
+  
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+      console.log("Logged in user:", user?.email);
+      console.log("Entered Password:", password);
+      console.log("Stored Hash:", user.password);
+      
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      
+      console.log("Password Match:", passwordMatch);
+      
+      if (!passwordMatch) {
+        return res.status(400).json({
+          success: false,
+          message: "Incorrect password",
+        });
+      }
+  
+      const otpRecord = await OTP.findOne({
+        email: user.email,
+      });
+  
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: "OTP not found",
+        });
+      }
+  
+      if (otpRecord.otp !== otp) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid OTP",
+        });
+      }
+  
+      if (new Date() > otpRecord.expiresAt) {
+        await OTP.deleteOne({ _id: otpRecord._id });
+  
+        return res.status(400).json({
+          success: false,
+          message: "OTP expired",
+        });
+      }
+  
+      await OTP.deleteOne({ _id: otpRecord._id });
+  
+      // Delete the user
+      await User.findByIdAndDelete(user._id);
+  
+      res.json({
+        success: true,
+        message: "Account deleted successfully",
+      });
+  
+    } catch (err) {
+      console.error(err);
+  
+      res.status(500).json({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  });
+
+  /*
+CHANGE PASSWORD
+*/
+
+router.post("/change-password", auth, async (req: AuthRequest, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+  
+      const user = await User.findById(req.user.id);
+  
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+  
+      const match = await bcrypt.compare(currentPassword, user.password);
+  
+      if (!match) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password is incorrect",
+        });
+      }
+  
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+  
+      user.password = hashedPassword;
+  
+      await user.save();
+  
+      res.json({
+        success: true,
+        message: "Password changed successfully",
+      });
+    } catch (err) {
+      console.error(err);
+  
+      res.status(500).json({
+        success: false,
+        message: "Server Error",
+      });
+    }
+  });
 export default router;

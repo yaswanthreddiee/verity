@@ -11,6 +11,7 @@ import ApprovePage from "./pages/ApprovePage";
 import Recovery from "./pages/Recovery";
 import RecoveryRequests from "./pages/RecoveryRequests";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AccountSettings from "./pages/AccountSettings";
 
 function App() {
   return (
@@ -36,7 +37,10 @@ function App() {
   element={<RecoveryRequests />}
 />
 
-
+<Route
+  path="/settings"
+  element={<AccountSettings />}
+/>
 
         <Route
           path="/verify"

@@ -150,7 +150,11 @@ export default function Dashboard() {
           <Link to="/recovery-requests">
             <button style={buttonStyle}>Recovery Requests</button>
           </Link>
-
+          <Link to="/settings">
+  <button style={buttonStyle}>
+    Account Settings
+  </button>
+</Link>
           <button
             disabled
             style={{
