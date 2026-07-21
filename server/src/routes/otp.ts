@@ -2,7 +2,8 @@ import { Router } from "express";
 import OTP from "../models/OTP";
 import User from "../models/User";
 import { sendEmail } from "../utils/email";
-
+import crypto from "crypto";
+import ResetSession from "../models/ResetSession";
 const router = Router();
 
 /*
@@ -42,7 +43,7 @@ router.post("/send", async (req, res) => {
       otp,
       expiresAt,
     });
-
+    console.log("Sending OTP to:", email);
     await sendEmail(
       email,
       "Verity Security OTP",
@@ -107,13 +108,26 @@ router.post("/verify", async (req, res) => {
         message: "Invalid OTP",
       });
     }
+    const token = crypto.randomBytes(32).toString("hex");
 
-    // OTP is valid -> delete it
+    // Remove old reset sessions
+    await ResetSession.deleteMany({ email });
+    
+    // Create new reset session
+    await ResetSession.create({
+      email,
+      token,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+    
+    // OTP is valid, so delete it
     await OTP.deleteOne({ _id: otpRecord._id });
-
-    res.json({
+    
+    // Return reset token
+    return res.json({
       success: true,
       message: "OTP verified successfully",
+      resetToken: token,
     });
 
   } catch (err) {

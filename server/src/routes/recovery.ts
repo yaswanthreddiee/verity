@@ -2,11 +2,12 @@ import { Router } from "express";
 import crypto from "crypto";
 
 import { auth, AuthRequest } from "../middleware/auth";
-
+import ResetSession from "../models/ResetSession";
 import RecoveryRequest from "../models/RecoveryRequest";
 import TrustCircle from "../models/TrustCircle";
 import Device from "../models/Device";
-
+import User from "../models/User";
+import PasswordRecoveryChallenge from "../models/PasswordRecoveryChallenge";
 const router = Router();
 
 /* ==========================================
@@ -253,4 +254,164 @@ router.post("/reject", auth, async (req: AuthRequest, res) => {
   }
 });
 
-export default router;
+/* ==========================================
+   Password Recovery Request
+========================================== */
+
+
+router.post("/password/request", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    await PasswordRecoveryChallenge.deleteMany({
+      email,
+    });
+
+    const challengeId = crypto.randomUUID();
+
+    const expiresAt = new Date(
+      Date.now() + 5 * 60 * 1000
+    );
+
+    await PasswordRecoveryChallenge.create({
+      challengeId,
+      email,
+      expiresAt,
+    });
+
+    return res.json({
+      success: true,
+      challengeId,
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
+});
+/* ==========================================
+   Password Recovery Status
+========================================== */
+
+router.get("/password/status/:challengeId", async (req, res) => {
+  try {
+    const { challengeId } = req.params;
+
+    const challenge = await PasswordRecoveryChallenge.findOne({
+      challengeId,
+    });
+    
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: "Challenge not found",
+      });
+    }
+
+    if (challenge.status === "APPROVED") {
+      return res.json({
+        success: true,
+        status: "APPROVED",
+        resetToken: challenge.resetToken,
+      });
+    }
+
+    res.json({
+      success: true,
+      status: "PENDING",
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+  }
+});
+/* ==========================================
+   Password Recovery Approve
+========================================== */
+
+/* ==========================================
+   Password Recovery Approve
+========================================== */
+
+router.post("/password/approve", auth, async (req: AuthRequest, res) => {
+  try {
+
+    const { challengeId } = req.body;
+
+    const challenge =
+      await PasswordRecoveryChallenge.findOne({
+        challengeId,
+      });
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: "Challenge not found",
+      });
+    }
+
+    const resetToken =
+      crypto.randomBytes(32).toString("hex");
+
+    await ResetSession.deleteMany({
+      email: challenge.email,
+    });
+
+    await ResetSession.create({
+      email: challenge.email,
+      token: resetToken,
+      expiresAt: new Date(
+        Date.now() + 10 * 60 * 1000
+      ),
+    });
+
+    challenge.status = "APPROVED";
+    challenge.resetToken = resetToken;
+
+    await challenge.save();
+
+    return res.json({
+      success: true,
+      message: "Password Recovery Approved",
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Server Error",
+    });
+
+  }
+});
+export default router; 

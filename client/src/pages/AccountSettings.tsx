@@ -50,7 +50,6 @@ export default function AccountSettings() {
       });
 
       alert(res.data.message);
-      setOtpSent(true);
       setCurrentPassword("");
       setNewPassword("");
     } catch (err: any) {
@@ -82,6 +81,7 @@ export default function AccountSettings() {
       });
   
       alert(res.data.message);
+      setOtpSent(true); 
     } catch (err: any) {
       alert(err.response?.data?.message || "Failed to send OTP");
     } finally {

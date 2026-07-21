@@ -3,12 +3,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import QRCode from "react-qr-code";
 import api from "../services/api";
 
-export default function QRVerification() {
+export default function TrustedDeviceRecovery() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const challengeId = location.state?.challengeId;
-
+  const email = location.state?.email;
   const [status, setStatus] = useState("⏳ Waiting for approval...");
   const [timeLeft, setTimeLeft] = useState(120);
 
@@ -16,8 +16,8 @@ export default function QRVerification() {
   useEffect(() => {
     if (!challengeId) {
       alert("Invalid QR Challenge");
-      navigate("/");
-      return;
+      navigate("/recover-account");
+            return;
     }
 
     const interval = setInterval(async () => {
@@ -27,28 +27,30 @@ export default function QRVerification() {
       }
 
       try {
-        const res = await api.get(`/qr/status/${challengeId}`);
-
-console.log("Polling response:", res.data);
-
-if (res.data.status === "APPROVED") {
-  clearInterval(interval);
-
-  localStorage.setItem("token", res.data.token);
-
-  setStatus("✅ Device Approved!");
-
-  setTimeout(() => {
-    navigate("/dashboard");
-  }, 1000);
-}
+        const res = await api.get(
+            `/recovery/password/status/${challengeId}`
+          );
+        if (res.data.status === "APPROVED") {
+            clearInterval(interval);
+          
+            setStatus("✅ Recovery Approved!");
+          
+            setTimeout(() => {
+              navigate("/reset-password", {
+                state: {
+                  email,
+                  resetToken: res.data.resetToken,
+                },
+              });
+            }, 1000);
+          }
       } catch (err) {
         console.error(err);
       }
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [challengeId, navigate]);
+}, [challengeId, navigate]);
   // Countdown Timer
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -70,8 +72,8 @@ if (res.data.status === "APPROVED") {
     seconds
   ).padStart(2, "0")}`;
 
-  const approvalUrl = `${import.meta.env.VITE_APP_URL}/approve/${challengeId}`;
-
+  const approvalUrl =
+  `${import.meta.env.VITE_APP_URL}/approve/password/${challengeId}`;
   return (
     <div
       style={{
@@ -115,7 +117,7 @@ if (res.data.status === "APPROVED") {
               lineHeight: 1.2,
             }}
           >
-            Verify New Device
+            Recover Password
           </h1>
         </div>
 
@@ -126,8 +128,7 @@ if (res.data.status === "APPROVED") {
             fontSize: "18px",
           }}
         >
-          Scan this QR code using one of your trusted devices to approve this
-          login.
+          Scan this QR code using one of your trusted devices to approve your password recovery.
         </p>
 
         {/* QR */}
@@ -164,7 +165,7 @@ if (res.data.status === "APPROVED") {
         {/* Alternatives */}
 
         <h2 style={{ color: "#374151" }}>
-          Need another way to verify?
+        Can't access your trusted device?
         </h2>
 
         <p
@@ -173,8 +174,8 @@ if (res.data.status === "APPROVED") {
             lineHeight: 1.6,
           }}
         >
-          If you cannot scan this QR code, you can recover your account using
-          your Recovery Circle or cancel this login attempt.
+           If you don't have any trusted devices, go back and use Email OTP
+           instead.
         </p>
 
         <div

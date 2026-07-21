@@ -22,4 +22,5 @@ app.use("/api/v1", routes);
 app.use("/api/email", emailRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/otp", otpRoutes);
+
 export default app;

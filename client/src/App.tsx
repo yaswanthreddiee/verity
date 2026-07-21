@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -10,15 +10,19 @@ import PendingRequests from "./pages/PendingRequests";
 import ApprovePage from "./pages/ApprovePage";
 import Recovery from "./pages/Recovery";
 import RecoveryRequests from "./pages/RecoveryRequests";
-import ProtectedRoute from "./components/ProtectedRoute";
 import AccountSettings from "./pages/AccountSettings";
+import RecoverAccount from "./pages/RecoverAccount";
+import EmailOTPRecovery from "./pages/EmailOTPRecovery";
+import ResetPassword from "./pages/ResetPassword";
+import TrustedDeviceRecovery from "./pages/TrustedDeviceRecovery";
 
+import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
         {/* Protected Routes */}
@@ -50,7 +54,10 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+<Route
+  path="/recover-account"
+  element={<RecoverAccount />}
+/>
         <Route
           path="/devices"
           element={
@@ -59,7 +66,12 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/" element={<LandingPage />} />
 
+<Route
+    path="/forgot-password/otp"
+    element={<EmailOTPRecovery />}
+/>
         <Route
           path="/trust-circle"
           element={
@@ -68,7 +80,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+  path="/forgot-password/trusted-device"
+  element={<TrustedDeviceRecovery />}
+/>
+<Route
+    path="/reset-password"
+    element={<ResetPassword />}
+/>
         <Route
           path="/pending"
           element={
@@ -83,8 +102,14 @@ function App() {
           path="/approve/:challengeId"
           element={<ApprovePage />}
         />
+        <Route
+  path="/approve/password/:challengeId"
+  element={<ApprovePage />}
+/>
       </Routes>
     </BrowserRouter>
+
+    
   );
 }
 

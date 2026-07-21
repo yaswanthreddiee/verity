@@ -24,7 +24,7 @@ export default function Register() {
 
       alert("Registration Successful");
 
-      navigate("/");
+      navigate("/login");
     } catch (err: any) {
       console.error(err);
 
@@ -76,7 +76,7 @@ export default function Register() {
           Register
         </button>
 
-        <Link to="/">
+        <Link to="/login">
           Already have an account? Login
         </Link>
       </div>

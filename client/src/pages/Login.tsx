@@ -117,6 +117,9 @@ export default function Login() {
       <br />
 
       <Link to="/register">Create Account</Link>
+      <Link to="/recover-account">
+    Recover Account
+</Link>
     </div>
   );
 }

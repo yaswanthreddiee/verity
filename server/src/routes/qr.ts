@@ -4,7 +4,7 @@ import { auth, AuthRequest } from "../middleware/auth";
 import QRChallenge from "../models/QRChallenge";
 import Device from "../models/Device";
 import Audit from "../models/Audit";
-
+import jwt from "jsonwebtoken";
 const router = Router();
 
 /*
@@ -74,7 +74,9 @@ router.post("/approve", auth, async (req: AuthRequest, res) => {
     challenge.approvedBy = req.user.id;
 
     await challenge.save();
+    const updated = await QRChallenge.findOne({ challengeId });
 
+    console.log("Saved status:", updated?.status);
     // Register trusted device only if it doesn't already exist
     const existing = await Device.findOne({
       userId: challenge.userId,
@@ -117,7 +119,7 @@ router.post("/approve", auth, async (req: AuthRequest, res) => {
 Check QR Challenge Status
 ----------------------------------------
 */
-router.get("/status/:challengeId", auth, async (req: AuthRequest, res) => {
+router.get("/status/:challengeId", async (req, res) => {
   try {
     const { challengeId } = req.params;
 
@@ -129,15 +131,38 @@ router.get("/status/:challengeId", auth, async (req: AuthRequest, res) => {
         message: "Challenge not found",
       });
     }
+    console.log(
+      "Status request:",
+      challenge.challengeId,
+      challenge.status
+    );
+    if (challenge.status !== "APPROVED") {
+      return res.json({
+        success: true,
+        status: challenge.status,
+      });
+    }
 
-    res.json({
+    const token = jwt.sign(
+      {
+        id: challenge.userId,
+      },
+      process.env.JWT_SECRET!,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    return res.json({
       success: true,
-      status: challenge.status,
+      status: "APPROVED",
+      token,
     });
+
   } catch (err) {
     console.log(err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch status",
     });
