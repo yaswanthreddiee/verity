@@ -62,9 +62,15 @@ router.post("/approve", auth, async (req: AuthRequest, res) => {
         message: "Already processed",
       });
     }
-
-    if (new Date() > challenge.expiresAt) {
+    if (!challenge.expiresAt) {
       return res.status(400).json({
+        success: false,
+        message: "Challenge has no expiry",
+      });
+    }
+    
+    if (new Date() > challenge.expiresAt!) {
+            return res.status(400).json({
         success: false,
         message: "Challenge expired",
       });
