@@ -1,5 +1,6 @@
+import { useEffect } from "react";
+import type { ReactElement } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { ReactElement, useEffect } from "react";
 import api from "../services/api";
 import { socket } from "../services/socket";
 
